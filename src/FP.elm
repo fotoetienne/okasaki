@@ -1,5 +1,6 @@
 module FP where
 
+import Html
 import List
 import String
 
@@ -58,3 +59,6 @@ take k xs =
 
   else
     Ok (List.take k xs)
+
+main =
+  Html.text "Hello world"
