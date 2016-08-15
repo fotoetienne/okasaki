@@ -9,7 +9,7 @@ digitsOfInt n =
     else if n < 10 then
         [n]
     else
-        digitsOfInt(n//10) ++ [(n % 10)]
+        digitsOfInt (n // 10) ++ [(n % 10)]
 
 
 digitalSeq : Int -> List Int
@@ -22,7 +22,7 @@ digitalSeq n =
 
 additivePersistence : Int -> Int
 additivePersistence n =
-    List.length(digitalSeq n)
+    List.length (digitalSeq n)
 
 digitalRoot : Int -> Int
 digitalRoot n =
@@ -34,7 +34,7 @@ digitalRoot n =
 subsequences : List a -> List (List a)
 subsequences xs =
   let l = length xs in
-  map2 drop [0..l] (repeat (l+1) xs)
+  map2 drop [0..l] (repeat (l + 1) xs)
 
 take : Int -> List a -> Result String (List a)
 take k xs =
