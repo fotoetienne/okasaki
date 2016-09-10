@@ -1,6 +1,5 @@
 module Pi where
 
-
 import Random exposing (generate, map2, float)
 import Signal
 import Graphics.Element exposing (Element, empty)
