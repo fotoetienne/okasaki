@@ -1,5 +1,6 @@
 module Pi where
 
+
 import Random exposing (generate, map2, float)
 import Signal
 import Graphics.Element exposing (Element, empty)
@@ -34,7 +35,7 @@ view (w, h) ((hitCount, hs), (missCount, ms)) =
     pointSize = 10
 
     toHit point =
-      pointSize 
+      pointSize
       |> C.circle
       |> C.filled Color.darkBlue
       |> C.move (point.x * collageSize, point.y * collageSize)
