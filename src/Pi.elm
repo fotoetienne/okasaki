@@ -1,21 +1,28 @@
-module Pi where
+module Pi exposing (..)
 
+import Html.App as App
+import Html exposing (Html)
+import Time exposing (Time, millisecond)
 import Random exposing (generate, map2, float)
-import Signal
-import Graphics.Element exposing (Element, empty)
-import Graphics.Collage as C exposing (Form)
+import Collage as C exposing (Form)
+import Element exposing (Element, empty, toHtml)
 import Text
 import Color
 import String
-import Window
-import Time exposing (millisecond)
+
+type Msg
+  = Tick Time
+  | NewPoint Point
 
 type alias Point = { x:Float, y:Float }
-type alias State = ((Int, List Point), (Int, List Point))
+type alias Model = ((Int, List Point), (Int, List Point))
 
-initState = ((0,[]), (0,[]))
+initModel = ((0,[]), (0,[]))
 
-upstate : Point -> State -> State
+init : (Model, Cmd Msg)
+init = (initModel, Cmd.none)
+
+upstate : Point -> Model -> Model
 upstate pt ((hc, hs), (mc, ms)) =
   let
     distance = sqrt (pt.x^2 + pt.y^2)
@@ -26,12 +33,35 @@ upstate pt ((hc, hs), (mc, ms)) =
     else
       ((hc, hs), (mc+1, pt :: ms))
 
-view : (Int, Int) -> State -> Element
-view (w, h) ((hitCount, hs), (missCount, ms)) =
+genPoint : Cmd Msg
+genPoint =
   let
+    gen = float -1 1
+  in
+    generate NewPoint (map2 Point gen gen)
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  case msg of
+    Tick _ ->
+      (model, genPoint)
+
+    NewPoint point ->
+      (upstate point model, Cmd.none)
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  Time.every (Time.millisecond) Tick
+
+view : Model -> Html Msg
+view ((hitCount, hs), (missCount, ms)) =
+  let
+    h = 200
+    w = 200
+
     collageSize = toFloat h / 2 - 20
 
-    pointSize = 10
+    pointSize = 4
 
     toHit point =
       pointSize
@@ -53,29 +83,13 @@ view (w, h) ((hitCount, hs), (missCount, ms)) =
       |> C.move (collageSize, collageSize)
   in
     C.collage w h ((List.map toHit hs) ++ (List.map toMiss ms) ++ [number])
+    |> Element.toHtml
 
-genPoint : Random.Seed -> (Point, Random.Seed)
-genPoint s =
-  let
-    gen = float -1 1
-  in
-    generate (map2 Point gen gen) s
-
-signalPointSeed : Signal (Point, Random.Seed)
-signalPointSeed =
-  let
-    initial = ({x=0, y=0}, Random.initialSeed 17)
-
-    next _ (_, seed) = genPoint seed
-  in
-    Signal.foldp next initial (Time.every 10)
-
-signalPoint : Signal Point
-signalPoint =
-  signalPointSeed
-  |> Signal.map fst
-
-main : Signal Element
+main : Program Never
 main =
-  Signal.map2 view Window.dimensions
-  (Signal.foldp upstate initState signalPoint)
+  App.program
+    { init = init
+    , update = update
+    , view = view
+    , subscriptions = subscriptions
+    }

@@ -1,4 +1,4 @@
-module DrawTrees where
+module DrawTrees exposing (..)
 
 import ListsAndTrees exposing (..)
 

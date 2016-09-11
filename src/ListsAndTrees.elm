@@ -1,4 +1,4 @@
-module ListsAndTrees where
+module ListsAndTrees exposing (..)
 
 -- Since we're using cons to pattern match the first element of the list and
 -- we never destruct the remainder of the list we only call `suffixes` once

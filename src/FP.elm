@@ -1,4 +1,4 @@
-module FP where
+module FP exposing (..)
 
 import Html
 import List
@@ -52,7 +52,7 @@ subsequences xs =
 take : Int -> List a -> Result String (List a)
 take k xs =
   if List.length xs < k then
-    Err "not enough elements" 
+    Err "not enough elements"
 
   else if k < 0 then
     Err "negative index"
