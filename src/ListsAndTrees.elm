@@ -1,20 +1,35 @@
 module ListsAndTrees where
 
-suffixes xs =
-  -- TODO
-  []
+-- Since we're using cons to pattern match the first element of the list and
+-- we never destruct the remainder of the list we only call `suffixes` once
+-- for each item in the list. Thus it runs in O(n) time.
+suffixes list =
+  case list of
+    (x::xs) -> [list] ++ (suffixes xs)
+    []      -> [[]]
 
 type Tree = Empty | Node Int Tree Tree
 
 mem : Int -> Tree -> Bool
-mem _ _ =
-  -- TODO
-  False
+mem x tree =
+  case tree of
+    Node y l r ->
+           if x < y then (mem x l)
+      else if x > y then (mem x r)
+      else               True
+
+    Empty ->
+      False
 
 fullTree : Int -> Int -> Tree
-fullTree _ _ =
-  -- TODO
-  Empty
+fullTree x h =
+  if h > 0 then
+    let
+      tree = fullTree x (h-1)
+    in
+      Node x tree tree
+  else
+    Empty
 
 balancedTree : Int -> Int -> Tree
 balancedTree _ _ =
@@ -40,3 +55,6 @@ almostCompleteTrees : Int -> Int -> List Tree
 almostCompleteTrees _ _ =
   -- TODO
   []
+
+testSuffixes =
+  suffixes [1..4] == [[1,2,3,4],[2,3,4],[3,4],[4],[]]
