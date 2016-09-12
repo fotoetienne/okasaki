@@ -2,7 +2,9 @@ module Pi where
 
 import Random exposing (generate, float, initialSeed)
 import Signal exposing (foldp)
+import Graphics.Collage exposing (Form, collage, circle, move)
 import Graphics.Element exposing (Element, empty)
+import Color exposing (red, grey)
 import String
 import Window
 import Time exposing (fps, inMilliseconds)
@@ -19,13 +21,22 @@ euclidean {x,y} = sqrt (x^2 + y^2)
 upstate : Point -> State -> State
 upstate pt ((hitCount, hitList), (missCount, missList)) =
     if euclidean pt < 1 then
-        ((hitCount + 1, pt::hitList), (missCount, missList))
+        ((hitCount + 1, pt :: hitList), (missCount, missList))
     else
-        ((hitCount, hitList), (missCount + 1, pt::missList))
+        ((hitCount, hitList), (missCount + 1, pt :: missList))
+
+greySquare = Graphics.Collage.filled Color.grey (Graphics.Collage.square 400)
+
+dot = Graphics.Collage.filled Color.red (Graphics.Collage.circle 1)
+
+scale x = (x - 0.5) * 400
+
+renderPoint : Point -> Form
+renderPoint {x,y} = move (scale x, scale y) dot
 
 view : (Int,Int) -> State -> Element
-view (w,h) st =
-  empty
+view (w,h) ((hitCount, hits), (missCount, misses)) =
+  collage w h <| greySquare :: (List.map renderPoint hits)
 
 genPoint : Random.Seed -> (Point, Random.Seed)
 genPoint s0 =
