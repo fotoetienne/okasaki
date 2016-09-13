@@ -2,12 +2,13 @@ module Pi where
 
 import Random exposing (generate, float, initialSeed)
 import Signal exposing (foldp)
-import Graphics.Collage exposing (Form, collage, circle, move)
-import Graphics.Element exposing (Element, empty)
-import Color exposing (red, grey)
+import Graphics.Collage as C exposing (Form, collage, circle, move)
+import Graphics.Element as E exposing (Element, empty)
+import Color exposing (Color, red, grey, black)
 import String
 import Window
 import Time exposing (fps, inMilliseconds)
+import Text exposing (fromString)
 
 type alias Point = { x:Float, y:Float }
 
@@ -25,33 +26,49 @@ upstate pt ((hitCount, hitList), (missCount, missList)) =
     else
         ((hitCount, hitList), (missCount + 1, pt :: missList))
 
-greySquare = Graphics.Collage.filled Color.grey (Graphics.Collage.square 400)
+mupstate : List (Point) -> State -> State
+mupstate pts st = List.foldl upstate st pts
 
-dot = Graphics.Collage.filled Color.red (Graphics.Collage.circle 1)
+scale w x = x * (toFloat w)
 
-scale x = (x - 0.5) * 400
+greyRect w = C.filled grey <| C.rect (scale w 2) (scale w 1)
 
-renderPoint : Point -> Form
-renderPoint {x,y} = move (scale x, scale y) dot
+dot color = C.filled color (C.circle 1)
+
+estimatePi : Int -> Int -> Float
+estimatePi hits misses = (toFloat hits) / (toFloat misses)
+
+renderPoint : Int -> Color -> Point -> Form
+renderPoint w color {x,y} = move (scale w x, scale w (y - 0.5)) (dot color)
 
 view : (Int,Int) -> State -> Element
 view (w,h) ((hitCount, hits), (missCount, misses)) =
-  collage w h <| greySquare :: (List.map renderPoint hits)
+    let s = min (w // 2) h in
+    collage w h <| greyRect s ::
+      C.text (fromString <| String.left 7 <| toString <| estimatePi hitCount missCount) ::
+      (List.map (renderPoint s red) hits) ++
+      (List.map (renderPoint s black) misses)
 
 genPoint : Random.Seed -> (Point, Random.Seed)
 genPoint s0 =
-    let (x, s1) = generate (float 0 1) s0 in
+    let (x, s1) = generate (float -1 1) s0 in
     let (y, s2) = generate (float 0 1) s1 in
     ({x=x,y=y}, s2)
 
-signalPointSeed : Signal (Point, Random.Seed)
-signalPointSeed =
-    Signal.map (inMilliseconds >> floor >> initialSeed >> genPoint) (fps 30)
+genPoints : Int -> Random.Seed -> (List Point, Random.Seed)
+genPoints n s0 =
+    List.foldl
+      (\_ (pts, s) -> let (pt, s') = genPoint s in (pt :: pts, s'))
+      ([],s0) [0..n]
 
-signalPoint : Signal Point
+signalPointSeed : Signal (List Point, Random.Seed)
+signalPointSeed =
+    foldp (\_ (_,s) -> genPoints 100 s) (42 |> initialSeed |> (genPoints 1)) (fps 15)
+
+signalPoint : Signal (List Point)
 signalPoint = Signal.map fst signalPointSeed
 
 main : Signal Element
 main =
   Signal.map2 view Window.dimensions
-  (Signal.foldp upstate initState signalPoint)
+  (Signal.foldp mupstate initState signalPoint)
