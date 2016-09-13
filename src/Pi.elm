@@ -8,7 +8,7 @@ import Color exposing (Color, red, grey, black)
 import String
 import Window
 import Time exposing (fps, inMilliseconds)
-import Text exposing (fromString, typeface, height)
+import Text exposing (fromString, typeface, height, bold)
 
 type alias Point = { x:Float, y:Float }
 
@@ -47,8 +47,9 @@ view (w,h) ((hitCount, hits), (missCount, misses)) =
     collage w h <| -- greyRect s ::
       (List.map (renderPoint s red) hits) ++
       (List.map (renderPoint s black) misses) ++
-      [C.text (height 72 <| typeface ["helvetica"] <| fromString <|
-         String.left 7 <| toString <| estimatePi hitCount missCount)]
+      [C.text (bold <| height 72 <| typeface ["helvetica"] <| fromString <|
+         String.left 7 <| toString <| estimatePi hitCount missCount),
+       move (0,-50) <| C.text (height 36 <| fromString <| toString <| hitCount + missCount)]
 
 genPoint : Random.Seed -> (Point, Random.Seed)
 genPoint s0 =
@@ -60,11 +61,11 @@ genPoints : Int -> Random.Seed -> (List Point, Random.Seed)
 genPoints n s0 =
     List.foldl
       (\_ (pts, s) -> let (pt, s') = genPoint s in (pt :: pts, s'))
-      ([],s0) [0..n]
+      ([],s0) [1..n]
 
 signalPointSeed : Signal (List Point, Random.Seed)
 signalPointSeed =
-    foldp (\_ (_,s) -> genPoints 10 s) (42 |> initialSeed |> (genPoints 1)) (fps 25)
+    foldp (\_ (_,s) -> genPoints 99 s) (42 |> initialSeed |> (genPoints 99)) (fps 25)
 
 signalPoint : Signal (List Point)
 signalPoint = Signal.map fst signalPointSeed
