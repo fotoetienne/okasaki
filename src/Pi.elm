@@ -33,7 +33,7 @@ scale w x = x * (toFloat w)
 
 greyRect w = C.filled grey <| C.rect (scale w 2) (scale w 1)
 
-dot w color = C.filled color <| C.circle <| toFloat w / 100
+dot w color = C.filled color <| C.circle <| toFloat w / 150
 
 estimatePi : Int -> Int -> Float
 estimatePi hitCount totalCount = 4 * (toFloat hitCount) / (toFloat totalCount)
@@ -41,10 +41,11 @@ estimatePi hitCount totalCount = 4 * (toFloat hitCount) / (toFloat totalCount)
 renderPoint : Int -> Color -> Point -> Form
 renderPoint w color {x,y} = move (scale w x, scale w (y - 0.5)) (dot w color)
 
-points: Int -> List Point -> List Point -> List Form
-points s hits misses =
-        (List.map (renderPoint s black) misses) ++
-        (List.map (renderPoint s red) hits)
+renderPoints: Int -> List Point -> Color -> List Form
+renderPoints s points color = (List.map (renderPoint s color) points)
+
+whiteRect s = [ move (0, -(toFloat s / 20)) <| C.filled white
+                    <| C.rect (toFloat s * 2) (toFloat s / 3)]
 
 piText: Int -> Int -> Int -> List Form
 piText s hitCount totalCount =
@@ -56,14 +57,17 @@ view : (Int,Int) -> State -> Element
 view (w,h) ((hitCount, hits), (missCount, misses)) =
     let s = min (w // 2) h in
     let totalCount = hitCount + missCount in
-    E.layers <| List.map (collage w h) [points s hits misses, piText s hitCount totalCount]
+    E.layers <| List.map (collage w h)
+        [renderPoints s hits red,
+        [C.toForm <| E.opacity 0.5 <| C.collage w h <| whiteRect s],
+         renderPoints s misses black,
+         piText s hitCount totalCount]
 
-  -- E.opacity 0.1 <| C.collage 160 80 [C.filled white <| C.rect 160 80],
 
 genPoint : Random.Seed -> (Point, Random.Seed)
 genPoint s0 =
-    let (x, s1) = generate (float -1 1) s0 in
-    let (y, s2) = generate (float 0 1) s1 in
+    let (x, s1) = generate (float -0.9999 0.9999) s0 in
+    let (y, s2) = generate (float -0.0001 0.9999) s1 in
     ({x=x,y=y}, s2)
 
 genPoints : Int -> Random.Seed -> (List Point, Random.Seed)
